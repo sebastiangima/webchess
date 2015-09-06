@@ -459,7 +459,30 @@ var rooms = (function(){
 			oargs:{handler:this},
 			common:{d: (this.id?this.id:this.guid?this.guid:'GUID')+'_'+guid}
 		}
-	//	this.controlFlier = new FlierControl(args);		
+	
+    this.controlFlier = new FlierControl(args);   
+
+
+    var aargs={
+
+          touchhoverin: function(){
+            var cn=this.className || '';
+            cn=cn.replace(/[ ]*forced-hover/,'');
+            cn=(cn?cn + "  " : "") + 'forced-hover';
+            this.className=cn;
+//            this.style['background-color']='red';
+          },
+          touchhoverout: function(){
+            var cn=this.className || ''
+            cn=cn.replace(/[ ]*forced-hover/,'');
+            this.className=cn;
+//            this.style['background-color']='red';
+          }
+    }
+    domHelper.mapToElement(this.element.dcapturer,args);
+
+  
+  //	this.controlFlier = new FlierControl(args);		
 	
 	}
   

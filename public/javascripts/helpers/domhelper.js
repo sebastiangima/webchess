@@ -13,7 +13,61 @@ var domHelper = (function(){
 
 	DomHelper.prototype.inittedto;
 
-	DomHelper.prototype.fromObject_ = function fromObject_(o,l){
+
+  DomHelper.prototype.scaleBox = function scaleBox(e,o){
+    var mw=document.body.clientWidth;
+    var mh=document.body.clientHeight;
+    o=o||{}
+    o.margins=o.margins || {}
+    o.margins.left=o.margins.left||'30px';
+    o.margins.right=o.margins.right||'30px';
+    o.margins.top=o.margins.top||'30px';
+    o.margins.bottom=o.margins.bottom||'30px';
+    var w,h;
+    h=mh, w=mw;
+    for(var i in o.margins) {
+      var unit = o.margins[i].replace(/^[0-9-,\.]+/,'').toLowerCase()
+      var value = +(o.margins[i].replace(/([0-9\.,-]*).*/,'$1'))
+
+      if (unit=='%') {
+        switch(i) {
+          case 'left':
+          case 'right':
+            value=value*mw/100;
+            w=w-value;
+          break;
+          case 'top':
+          case 'bottom':
+            value=value*mh/100;
+            h=h-value;
+          break;
+          
+        }
+        unit='px';
+      }
+      else {
+        switch(i) {
+          case 'left':
+          case 'right':
+            w-=value;
+          break;
+          case 'top':
+          case 'bottom':
+            h-=value;
+          break;
+        }
+      }
+    }
+    // rectángulo default: 480px translate (0,0) scale(1)
+    // defaut 480 ----- scale(??)  ......  w
+    var sw=w/480
+    //sh=h*480
+    var tx=(-100*(1-sw))+'px'
+    e.style.transform='scale('+sw+','+sw+') translate('+tx+'px,'+tx+'px)!important';
+  }
+
+
+  	DomHelper.prototype.fromObject_ = function fromObject_(o,l){
 		var result='', t, tab = '&nbsp;&nbsp;', tabs = '', sl='<br />', r='';
 		
 		for (var i=0; i<l; ++i) tabs+=tab;
@@ -356,7 +410,132 @@ var domHelper = (function(){
 		return r;
 	}
 	
+  DomHelper.prototype.buildMobileEvent=function buildMobileEvent(e,mn,mv){
+    var mmn="",   // nombre dem metodo para mobies
+      nmn="";   // nombre normalizado para resgistrarse en el evento
+    switch(mn) {
+      case 'onmousedown': mmn='touchstart'; nmn='mousedown'; break;
+      case 'onmousemove': mmn='touchmove';  nmn='mousemove';break;
+      case 'onmouseup': mmn='touchend';  nmn='mouseup';break;
+      case 'touchhoverin': mmn='touchstart';  nmn='mousedown';break;
+      case 'touchhoverout': mmn='touchend'; nmn='mouseup'; break;
+    }
+    var mobileScope = function(e,mn,mv,mmn, nmn){
+      e.addEventListener(mmn,function(ee) {
+        ee.stopPropagation();
+          ee.preventDefault();
+        var touchObj;
+         if(!ee.touches || !ee.touches.length) {
+
+           touchObj=ee.changedTouches[0]
+          }
+          else {
+
+           touchObj=ee.touches[0]
+          }
+          window.sgtouch=window.sgtouch || [];
+          window.sgtouch.push(ee)
+        /*  switch (mn) {1
+            case "touchhoverin":
+            break;
+            case "touchhoverout":
+            break;
+            default:
+*/
+            var clkEvt = document.createEvent('MouseEvent');
+              clkEvt.initMouseEvent(nmn, true, true, window, ee.detail, 
+                               touchObj.screenX, touchObj.screenY, 
+                               touchObj.clientX, touchObj.clientY, 
+                               false, false, false, false, 
+                               0, null);
+              e.dispatchEvent(clkEvt);
+        //  break;
+        //}
+
+        },false)
+    }
+    mobileScope(e,mn,mv,mmn,nmn)
+    
+  }
+  
+  
+
 	DomHelper.prototype.mapMethodToElement=function mapMethodToElement(e,mn,mv){
+		    switch(mn){
+      case "onmousedown":
+      case "onmousemove":
+      case "onmouseup":
+      case "touchhoverin":
+      case "touchhoverout":
+      
+        this.buildMobileEvent(e,mn,mv)
+      break;
+    }
+/*    switch(mn){
+      case "onmousedown":
+        e.addEventListener('touchstart', function (ee) {
+            // stop touch event
+            ee.stopPropagation();
+            ee.preventDefault();
+
+            // translate to mouse event
+            var clkEvt = document.createEvent('MouseEvent');
+            clkEvt.initMouseEvent('mousedown', true, true, window, ee.detail, 
+                         ee.touches[0].screenX, ee.touches[0].screenY, 
+                         ee.touches[0].clientX, ee.touches[0].clientY, 
+                         false, false, false, false, 
+                         0, null);
+            e.dispatchEvent(clkEvt);
+
+            // or just handle touch event
+          //myMoveHandler(e);
+        }, false);
+
+      break;
+      case "onmouseup":
+        e.addEventListener('touchend', function (ee) {
+            // stop touch event
+            ee.stopPropagation();
+            ee.preventDefault();
+
+            var touchObj=ee.changedTouches[0];
+            // translate to mouse event
+            var clkEvt = document.createEvent('MouseEvent');
+            clkEvt.initMouseEvent('mouseup', true, true, window, ee.detail, 
+                         touchObj.screenX, touchObj.screenY, 
+                         touchObj.clientX, touchObj.clientY, 
+                         false, false, false, false, 
+                         0, null);
+            e.dispatchEvent(clkEvt);
+
+            // or just handle touch event
+          //myMoveHandler(e);
+        }, false);
+
+      break;
+            case "onmousemove":
+        e.addEventListener('touchsmove', function (ee) {
+            // stop touch event
+            ee.stopPropagation();
+            ee.preventDefault();
+
+            // translate to mouse event
+            var clkEvt = document.createEvent('MouseEvent');
+            clkEvt.initMouseEvent('mousemove', true, true, window, ee.detail, 
+                         ee.touches[0].screenX, ee.touches[0].screenY, 
+                         ee.touches[0].clientX, ee.touches[0].clientY, 
+                         false, false, false, false, 
+                         0, null);
+            e.dispatchEvent(clkEvt);
+
+            // or just handle touch event
+          //myMoveHandler(e);
+        }, false);
+
+      break;
+
+    } */
+
 		e[mn]=function() {
 			if (domHelper.captureEvents[arguments[0].type]) {
 				var o = this;

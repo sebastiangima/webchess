@@ -79,7 +79,9 @@ IBaseRoom.prototype.endInit = function endInit() {
 	var d = this.getElement('PANEL_PLAYERS');
 	d.parentNode.appendChild(d.parentNode.removeChild(d))
 	var d = this.getElement('TABLERITOS');
-	d.parentNode.appendChild(d.parentNode.removeChild(d))
+	if (d) {
+    d.parentNode.appendChild(d.parentNode.removeChild(d))
+  }
 /*	setTimeout(function(){
 	for(var i=0; i<12; ++i)
 		this_.addTablerito()
@@ -442,6 +444,9 @@ IBaseRoom.prototype.initGame = function initGame(){
 	div.innerHTML=html;
 	
 	this.element.appendChild(div.children[0]);
+    var tr=this.element.getElementsByClassName('table-room')[0];
+  domHelper.scaleBox(tr);
+  
 }
 
 IBaseRoom.prototype.initPanelJugadas = function initPanelJugadas(){
